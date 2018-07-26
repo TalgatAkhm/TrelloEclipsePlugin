@@ -20,15 +20,12 @@ import com.google.gson.reflect.TypeToken;
 public class Main {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		System.out.println("run");
+		// System.out.println("run");
 
-		Requester requester = new Requester();
-		String response;
-		Gson gsonParser = new Gson();
 		TrelloRequestCreator creator = new TrelloRequestCreator();
 
 		Board apiTestBoard = creator.getCurrentBoardByName("ApiTest");
+		
 		for (BoardList list : creator.getBoardList(apiTestBoard)) {
 			System.out.println("->" + list.getName());
 			for (Card card : creator.getCards(list)) {

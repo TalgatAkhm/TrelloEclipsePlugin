@@ -17,28 +17,37 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class TrelloRequestCreator {
-	public static final String apiUrl = "https://api.trello.com/1";
-	public static final String apiKey = "c4ecce1f80fefbb749052735a8a5dabd";
-	public static final String localToken = "9ac12e523ffabce0bb114b5d2c962dad59d9a92a690c29600dc3774e86d59c22";
-	public static final String requestAccountParams = "key=" + apiKey + "&token=" + localToken;
+	public static final String API_URL = "https://api.trello.com/1";
+	public static final String API_KEY = "c4ecce1f80fefbb749052735a8a5dabd";
+	public static final String LOCAL_TOKEN = "9ac12e523ffabce0bb114b5d2c962dad59d9a92a690c29600dc3774e86d59c22";
+	public static final String REQUEST_ACCOUNT_DATA = "key=" + API_KEY + "&token=" + LOCAL_TOKEN;
 
 	Requester requester;
 	Gson gsonParser;
 	String response;
+	Type toListOfBoards;
+	Type toListOfCards;
+	Type toListOfBoardLists;
 
 	public TrelloRequestCreator() {
 		requester = new Requester();
 		gsonParser = new Gson();
+		toListOfBoards = new TypeToken<ArrayList<Board>>() {
+		}.getType();
+		toListOfCards = new TypeToken<ArrayList<Card>>() {
+		}.getType();
+		toListOfBoardLists = new TypeToken<ArrayList<BoardList>>() {
+		}.getType();
 	}
 
 	public static String getApikey() {
-		return apiKey;
+		return API_KEY;
 	}
 
 	public List<Board> getAllBoards() {
 		response = "";
 		try {
-			response = requester.run(apiUrl + "/members/me/boards/all?" + requestAccountParams);
+			response = requester.run(API_URL + "/members/me/boards/all?" + REQUEST_ACCOUNT_DATA);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -46,44 +55,41 @@ public class TrelloRequestCreator {
 		if (response.length() == 0) {
 			return null;
 		}
-		return gsonParser.fromJson(response, new TypeToken<ArrayList<Board>>() {
-		}.getType());
+		return gsonParser.fromJson(response, toListOfBoards);
 	}
 
 	public Board getCurrentBoardByName(String name) {
-		return getAllBoards().stream().filter(Board -> Board.getName().equals(name)).collect(Collectors.toList())
+		return getAllBoards().parallelStream()
+				.filter(Board -> Board.getName().equals(name))
+				.collect(Collectors.toList())
 				.get(0);
 	}
 
 	public List<BoardList> getBoardList(Board board) {
 		response = "";
 		try {
-			response = requester.run(apiUrl + "/boards/" + board.getId() + "/lists?" + requestAccountParams);
+			response = requester.run(API_URL + "/boards/" + board.getId() + "/lists?" + REQUEST_ACCOUNT_DATA);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if(response.length()==0) {
+		if (response.length() == 0) {
 			return null;
 		}
-		return gsonParser.fromJson(response, new TypeToken<ArrayList<BoardList>>() {
-		}.getType());
+		return gsonParser.fromJson(response, toListOfBoardLists);
 	}
-	
-	public List<Card> getCards(BoardList list){
+
+	public List<Card> getCards(BoardList list) {
 		response = "";
 		try {
-			response = requester.run(apiUrl + "/lists/" + list.getId() + "/cards?"
-					+ requestAccountParams);
+			response = requester.run(API_URL + "/lists/" + list.getId() + "/cards?" + REQUEST_ACCOUNT_DATA);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		if(response.length()==0) {
+		if (response.length() == 0) {
 			return null;
 		}
-		
-		return gsonParser.fromJson(response, new TypeToken<ArrayList<Card>>() {
-		}.getType());
+
+		return gsonParser.fromJson(response, toListOfCards);
 	}
 }
